@@ -83,14 +83,18 @@ model Invite {
 ## Sessions & Password Hashing
 
 - Passwords are hashed with `bcryptjs` (pure JS, no native build step — relevant on this Windows dev box) before storage. Plaintext passwords are never logged or stored.
-- A session is a random opaque token (32 bytes, base64url) stored both as `Session.token` and as the cookie value (`httpOnly`, `secure` in production, `sameSite=lax`, ~30-day expiry). No JWT/signing library is used — the token's entropy plus cookie flags is the standard approach (this is how Rails/Django/Laravel sessions work), and it keeps revocation as simple as deleting the DB row (needed once admins can deactivate/edit other users).
+- A session is a random opaque token (32 bytes, base64url) stored both as `Session.token` and as the cookie value (`httpOnly`, `secure` in production, `sameSite=lax`). No JWT/signing library is used — the token's entropy plus cookie flags is the standard approach (this is how Rails/Django/Laravel sessions work), and it keeps revocation as simple as deleting the DB row (needed once admins can deactivate/edit other users).
+- **"Remember me"**: the login form has a "Remember me" checkbox.
+  - **Unchecked (default)**: the cookie is set with no `Max-Age`/`Expires`, so the browser discards it when fully closed; the backing `Session.expiresAt` is set to **24 hours** as a hard backstop (covers browsers that restore tabs/sessions on relaunch instead of truly clearing session cookies).
+  - **Checked**: the cookie is set with `Max-Age` for **30 days**, and `Session.expiresAt` matches — still a hard expiry, never indefinite, satisfying "cannot be permanent."
+  - `createSession(userId, remember: boolean)` applies whichever of the two durations above.
 - `src/lib/dal.ts` is the Data Access Layer, the single place auth state is read:
   - `getCurrentUser()` — cached per-request via React `cache()`; reads the cookie, looks up `Session` + `User` in Postgres, checks expiry, returns the user or `null`.
   - `requireUser()` — calls `getCurrentUser()`, redirects to `/login` if absent.
   - `requireAdmin()` — calls `requireUser()`, redirects/blocks if `role !== ADMIN`.
   - `requireTripAccess(tripId)` — calls `requireUser()`, checks a `TripMember` row exists for `(userId, tripId)`.
   - `requireTripLeader(tripId)` — calls `requireTripAccess(tripId)`, passes if the user's platform `role` is `ADMIN` **or** their `TripMember.tripRole` for that trip is `LEADER`; redirects/blocks otherwise.
-  - `createSession(userId)` / `deleteSession()` — used by login/logout.
+  - `createSession(userId, remember)` / `deleteSession()` — used by login/logout.
 
 ## Route Protection (`proxy.ts`)
 
@@ -135,17 +139,17 @@ There are two invite-creation paths, both producing the same kind of `Invite` ro
 - **`/trips/[slug]`** — the existing `TripApp` UI, now reached via a dynamic route (replacing the hardcoded `page.tsx`), guarded by `requireTripAccess(tripId)`.
 - **`/trips/[slug]/manage`** — trip-level admin panel, guarded by `requireTripLeader(tripId)`: lists this trip's members with remove / promote-to-Leader / demote-from-Leader actions, plus an "Invite to this trip" action (the scoped invite flow above). Linked from the trip page, visible only to that trip's Leaders and to platform Admins.
 - **`/`** — redirects to `/trips` if logged in, else `/login`.
-- **`/account`** — self-service: edit own username/email, change password.
+- **`/profile`** — self-service: edit own username/email/password, plus a "Your trips" list — the same `TripMember`-based data as `/trips`, just also surfaced here. Reached by clicking the username in the header.
 - **`/admin/users`** — admin-only: list/create/edit/remove users, manage per-user trip access, "Invite user" action.
 - **`/signup/[token]`** — public invite-redemption page.
-- **`Header.tsx`** — gains the current username, a logout button, and an "Admin" link visible only to admins.
+- **`Header.tsx`** — the current username (top right) becomes a link to `/profile`; gains a logout button and an "Admin" link visible only to admins.
 
 **Existing-code impact**: `MemberRecord` (`src/lib/trip.ts`) changes shape from `{ name, hue, order }` to `{ user: { username }, hue, order }`. Components currently reading `member.name` (expense rows, member-color legend) need a one-line change to `member.user.username`. No other UI rework is needed.
 
 ## Validation Rules
 
 - **Username**: 3–30 characters, letters/numbers/underscore/hyphen only.
-- **Password**: minimum 8 characters. No additional complexity rules (matches the personal-use, low-attack-surface nature of this app).
+- **Password**: minimum 8 characters, and must include at least one uppercase letter, one lowercase letter, one number, and one symbol.
 - **Email**: standard email format validation; uniqueness enforced at the DB level (`@unique`).
 
 ## Migrating Existing Data
@@ -170,8 +174,8 @@ This wipes and regenerates the current seeded demo data, which is expected and f
 
 No test runner is configured in this repo today, and this design doesn't introduce one wholesale — but password hashing, session validation, and invite-token validation are exactly the kind of logic where an untested bug is a security bug. A minimal `vitest` setup is added, scoped to the new `src/lib/auth*`/`dal.ts` logic:
 
-- Password hash/verify round-trip.
-- Session create/validate/expire.
+- Password hash/verify round-trip, and the complexity validator (upper/lower/number/symbol/length) accepting and rejecting the right inputs.
+- Session create/validate/expire, including `createSession(userId, remember)` producing the right cookie/`expiresAt` pairing for both the 24-hour and 30-day cases.
 - Invite validate/expire/consume (including the single-use guarantee).
 - Permission guards (`requireUser`/`requireAdmin`/`requireTripAccess`/`requireTripLeader`) for allow/deny cases, including that platform Admins pass `requireTripLeader` for trips they have no `TripMember` row on at all.
 - Trip-Leader-issued invites always produce `role: USER` and `tripIds: [tripId]`, regardless of what the caller passes in.
