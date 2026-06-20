@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#f6f1ea;}
+  body{font-family:'Hanken Grotesk',sans-serif;-webkit-font-smoothing:antialiased;color:#211b17;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:#dcd2c5;border-radius:8px;border:3px solid #f6f1ea;}
+  input::placeholder,textarea::placeholder{color:#bcaf9f;}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#f6f1ea;">
+
+  <!-- ===== HEADER ===== -->
+  <header style="background:#fffdfa;border-bottom:1px solid #ece3d8;position:sticky;top:0;z-index:30;">
+    <div style="max-width:1180px;margin:0 auto;padding:18px 28px 0 28px;">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:#7c2d2d;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex:none;letter-spacing:-0.02em;">K</div>
+          <div>
+            <div style="font-size:21px;font-weight:800;letter-spacing:-0.02em;line-height:1;white-space:nowrap;">Kyoto &amp; Osaka</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#a09487;letter-spacing:0.02em;margin-top:4px;">{{ tripMeta }}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="display:inline-flex;align-items:center;gap:7px;background:#f6eceb;border:1px solid #f0dede;padding:5px 12px 5px 8px;border-radius:999px;font-size:12.5px;font-weight:600;color:#5f554c;">
+            <span style="width:18px;height:18px;border-radius:50%;background:oklch(0.58 0.10 25);"></span>Tristan</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;background:#eef1f6;border:1px solid #dee5f0;padding:5px 12px 5px 8px;border-radius:999px;font-size:12.5px;font-weight:600;color:#5f554c;">
+            <span style="width:18px;height:18px;border-radius:50%;background:oklch(0.58 0.10 235);"></span>Tris</span>
+        </div>
+      </div>
+      <nav style="display:flex;gap:26px;margin-top:14px;overflow-x:auto;border-bottom:1px solid #ece3d8;">
+        <sc-for list="{{ tabs }}" as="tab" hint-placeholder-count="5">
+          <button onClick="{{ tab.onClick }}" style="{{ tab.style }}" style-hover="{{ tab.hover }}">{{ tab.label }}</button>
+        </sc-for>
+      </nav>
+    </div>
+  </header>
+
+  <div style="max-width:1180px;margin:0 auto;padding:24px 28px 64px 28px;">
+
+    <!-- ===== ITINERARY ===== -->
+    <sc-if value="{{ isItin }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+          <div style="display:inline-flex;gap:3px;background:#ece3d8;padding:3px;border-radius:9px;">
+            <sc-for list="{{ dirBtns }}" as="d" hint-placeholder-count="3">
+              <button onClick="{{ d.onClick }}" style="{{ d.style }}" style-hover="{{ d.hover }}">{{ d.name }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;">
+            <div style="width:120px;height:6px;background:#e7ddd0;border-radius:999px;overflow:hidden;"><div style="{{ progressBarStyle }}"></div></div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8a7e74;font-weight:500;white-space:nowrap;">{{ progressText }}</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;">
+          <!-- day rail -->
+          <aside style="flex:1 1 178px;min-width:170px;max-width:222px;display:flex;flex-direction:column;gap:5px;position:sticky;top:118px;">
+            <sc-for list="{{ dayList }}" as="d" hint-placeholder-count="8">
+              <button onClick="{{ d.onClick }}" onDragOver="{{ d.onDragOver }}" onDrop="{{ d.onDrop }}" style="{{ d.style }}" style-hover="{{ d.hover }}">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">
+                  <span style="{{ d.labelStyle }}">{{ d.label }}</span>
+                  <span style="{{ d.metaStyle }}">{{ d.meta }}</span>
+                </div>
+                <span style="{{ d.dateStyle }}">{{ d.date }} &middot; {{ d.dow }}</span>
+                <span style="{{ d.titleStyle }}">{{ d.title }}</span>
+              </button>
+            </sc-for>
+            <button onClick="{{ onAddDay }}" style="appearance:none;cursor:pointer;width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:12.5px;font-weight:600;color:#8a7e74;background:transparent;border:1px dashed #d8cab8;border-radius:9px;padding:11px;margin-top:3px;display:flex;align-items:center;justify-content:center;gap:6px;" style-hover="background:#fbf6ef;border-color:#7c2d2d;color:#7c2d2d;">+ Add day</button>
+          </aside>
+
+          <!-- day detail -->
+          <section style="flex:3 1 460px;min-width:300px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap;">
+              <h2 style="margin:0;font-size:25px;font-weight:800;letter-spacing:-0.025em;white-space:nowrap;">{{ curNum }}</h2>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#a09487;letter-spacing:-0.01em;">{{ curDate }} &middot; {{ curDow }}</span>
+              <sc-if value="{{ renamingDay }}" hint-placeholder-val="{{ false }}">
+                <span style="display:inline-flex;gap:7px;align-items:center;">
+                  <input value="{{ dayTitleDraft }}" onChange="{{ onDayTitleInput }}" style="font-family:'Hanken Grotesk',sans-serif;font-size:15px;font-weight:500;color:#211b17;background:#fff;border:1px solid #7c2d2d;border-radius:7px;padding:5px 10px;outline:none;min-width:190px;" />
+                  <button onClick="{{ onSaveRename }}" style="appearance:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:12.5px;font-weight:600;color:#fff;background:#7c2d2d;border:none;padding:7px 13px;border-radius:7px;">Save</button>
+                </span>
+              </sc-if>
+              <sc-if value="{{ notRenamingDay }}" hint-placeholder-val="{{ true }}">
+                <span style="font-size:16px;color:#6f655b;font-weight:500;">&mdash; {{ curTitle }}</span>
+                <button onClick="{{ onStartRename }}" style="appearance:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:11.5px;font-weight:600;color:#a89c8d;background:transparent;border:none;padding:3px 7px;border-radius:6px;" style-hover="background:#f1e9dd;color:#6f655b;">Rename</button>
+              </sc-if>
+              <sc-if value="{{ canDeleteDay }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ onDeleteDay }}" style="margin-left:auto;appearance:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:11.5px;font-weight:600;color:#b1452f;background:transparent;border:1px solid #ecc9bf;padding:6px 12px;border-radius:7px;" style-hover="background:#fbeeea;">Delete day</button>
+              </sc-if>
+            </div>
+
+            <div onDragOver="{{ onListOver }}" onDrop="{{ onListDrop }}">
+              <sc-for list="{{ activities }}" as="act" hint-placeholder-count="5">
+                <sc-if value="{{ act.showIndicatorBefore }}" hint-placeholder-val="{{ false }}"><div style="{{ indicatorLineStyle }}"></div></sc-if>
+                <!-- EDIT FORM (in place) -->
+                <sc-if value="{{ act.isEditing }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:#fffdfa;border:1px solid #e3d6c6;border-radius:13px;padding:16px;margin-bottom:12px;box-shadow:0 6px 22px rgba(60,40,20,0.08);display:flex;flex-direction:column;gap:13px;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:#7c2d2d;font-weight:600;">Edit activity</div>
+                    <div style="display:flex;gap:11px;flex-wrap:wrap;">
+                      <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;flex:2;min-width:150px;">Label
+                        <select value="{{ draft.label }}" onChange="{{ onDraftLabel }}" style="width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;cursor:pointer;">
+                          <option value="Early Morning">Early Morning</option><option value="Morning">Morning</option><option value="Coffee">Coffee</option><option value="Lunch">Lunch</option><option value="Afternoon">Afternoon</option><option value="Dinner">Dinner</option><option value="Evening">Evening</option><option value="Late Evening">Late Evening</option><option value="Transit">Transit</option>
+                        </select>
+                      </label>
+                      <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;flex:1;min-width:110px;">Time
+                        <input value="{{ draft.time }}" onChange="{{ onDraftTime }}" placeholder="e.g. 1000h" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:13px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;" style-focus="border-color:#7c2d2d;box-shadow:0 0 0 3px rgba(124,45,45,0.08);" />
+                      </label>
+                    </div>
+                    <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;">Title
+                      <input value="{{ draft.title }}" onChange="{{ onDraftTitle }}" placeholder="What's the plan?" style="width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;" style-focus="border-color:#7c2d2d;box-shadow:0 0 0 3px rgba(124,45,45,0.08);" />
+                    </label>
+                    <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;">Location
+                      <input value="{{ draft.place }}" onChange="{{ onDraftPlace }}" placeholder="Address or area" style="width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;" style-focus="border-color:#7c2d2d;box-shadow:0 0 0 3px rgba(124,45,45,0.08);" />
+                    </label>
+                    <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;">Notes
+                      <textarea value="{{ draft.note }}" onChange="{{ onDraftNote }}" rows="2" placeholder="Hours, tips, reservations\u2026" style="width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;resize:vertical;line-height:1.45;" style-focus="border-color:#7c2d2d;box-shadow:0 0 0 3px rgba(124,45,45,0.08);"></textarea>
+                    </label>
+                    <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;">Booking ref
+                      <input value="{{ draft.ref }}" onChange="{{ onDraftRef }}" placeholder="optional" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:13px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;" style-focus="border-color:#7c2d2d;box-shadow:0 0 0 3px rgba(124,45,45,0.08);" />
+                    </label>
+                    <div style="display:flex;gap:8px;align-items:center;padding-top:2px;">
+                      <button onClick="{{ onSaveEdit }}" style="appearance:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;color:#fff;background:#7c2d2d;border:none;padding:9px 16px;border-radius:8px;">Save changes</button>
+                      <button onClick="{{ onCancelEdit }}" style="appearance:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;color:#6f655b;background:transparent;border:1px solid #e3d6c6;padding:9px 14px;border-radius:8px;">Cancel</button>
+                      <span style="flex:1;"></span>
+                      <button onClick="{{ onDeleteAct }}" style="appearance:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;color:#b1452f;background:transparent;border:1px solid #ecc9bf;padding:9px 14px;border-radius:8px;" style-hover="background:#fbeeea;">Delete</button>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <!-- ACTIVITY CARD -->
+                <sc-if value="{{ act.notEditing }}" hint-placeholder-val="{{ true }}">
+                  <div style="{{ act.rowStyle }}" draggable="true" onDragStart="{{ act.onDragStart }}" onDragOver="{{ act.onCardDragOver }}" onDrop="{{ act.onCardDrop }}" onDragEnd="{{ act.onDragEnd }}">
+                    <div style="width:78px;flex:none;text-align:right;padding-top:2px;">
+                      <sc-if value="{{ act.hasTime }}" hint-placeholder-val="{{ false }}"><span style="{{ act.timeStyle }}">{{ act.time }}</span></sc-if>
+                      <sc-if value="{{ act.noTime }}" hint-placeholder-val="{{ true }}"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#c9bdae;">&middot;&middot;</span></sc-if>
+                    </div>
+                    <div style="position:relative;width:20px;flex:none;display:flex;justify-content:center;align-self:stretch;">
+                      <sc-if value="{{ act.showLine }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:23px;bottom:-22px;left:50%;width:2px;background:#e6ddd0;transform:translateX(-50%);"></div></sc-if>
+                      <button onClick="{{ act.onToggle }}" style="{{ act.dotStyle }}" style-hover="{{ act.dotHover }}">
+                        <sc-if value="{{ act.isDone }}" hint-placeholder-val="{{ false }}"><span style="color:#fff;font-size:11px;line-height:1;font-weight:700;">&check;</span></sc-if>
+                      </button>
+                    </div>
+                    <div style="{{ act.contentStyle }}" style-hover="{{ act.contentHover }}">
+                      <div onClick="{{ act.onExpand }}" style="cursor:pointer;display:flex;flex-direction:column;gap:7px;flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:8px;width:100%;">
+                          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1;min-width:0;">
+                            <span style="{{ act.chipStyleObj }}">{{ act.label }}</span>
+                            <sc-if value="{{ act.hasRef }}" hint-placeholder-val="{{ false }}"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:#9a8f84;background:#f1e9dd;padding:2px 7px;border-radius:5px;letter-spacing:0.02em;">{{ act.ref }}</span></sc-if>
+                          </div>
+                          <sc-if value="{{ act.hasConflict }}" hint-placeholder-val="{{ false }}"><span title="{{ act.conflictTitle }}" style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:5px;background:#fbeae6;color:#c0392b;font-size:11px;font-weight:800;line-height:1;flex:none;cursor:help;">!</span></sc-if>
+                          <button onClick="{{ act.onEdit }}" style="appearance:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:11.5px;font-weight:600;color:#a89c8d;background:transparent;border:none;padding:3px 8px;border-radius:6px;flex:none;" style-hover="background:#f1e9dd;color:#6f655b;">Edit</button>
+                        </div>
+                        <div style="{{ act.titleStyle }}">{{ act.title }}</div>
+                        <sc-if value="{{ act.hasPlace }}" hint-placeholder-val="{{ true }}"><div style="font-size:12.5px;color:#9a8f84;display:flex;align-items:center;gap:6px;line-height:1.35;"><span style="color:#c2b6a6;font-size:11px;">&#9678;</span><span style="overflow:hidden;text-overflow:ellipsis;">{{ act.place }}</span></div></sc-if>
+                        <sc-if value="{{ act.isExpanded }}" hint-placeholder-val="{{ false }}">
+                          <div style="margin-top:4px;padding-top:11px;border-top:1px dashed #e6ddd0;display:flex;flex-direction:column;gap:11px;">
+                            <sc-if value="{{ act.hasNote }}" hint-placeholder-val="{{ true }}"><div style="font-size:13px;color:#5f554c;line-height:1.5;text-wrap:pretty;">{{ act.note }}</div></sc-if>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                              <button onClick="{{ act.onMap }}" style="appearance:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;color:#7c2d2d;background:#f6eceb;border:1px solid #f0dede;padding:6px 12px;border-radius:7px;display:inline-flex;align-items:center;gap:6px;">&#9678; View on map</button>
+                              <sc-if value="{{ act.hasRef }}" hint-placeholder-val="{{ false }}"><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;color:#6f655b;background:#f1e9dd;padding:6px 11px;border-radius:7px;display:inline-flex;align-items:center;">Ref {{ act.ref }}</span></sc-if>
+                            </div>
+                          </div>
+                        </sc-if>
+                      </div>
+                      <sc-if value="{{ t.thumb }}" hint-placeholder-val="{{ false }}">
+                        <div style="width:108px;height:78px;flex:none;border-radius:10px;background:repeating-linear-gradient(45deg,#efe7dc,#efe7dc 7px,#e8ddcc 7px,#e8ddcc 14px);border:1px solid #e6ddd0;display:flex;align-items:flex-end;justify-content:flex-start;padding:6px;"><span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#a89c8d;background:rgba(255,253,250,0.85);padding:2px 5px;border-radius:4px;">photo</span></div>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-if>
+              </sc-for>
+              <sc-if value="{{ indicatorAtEnd }}" hint-placeholder-val="{{ false }}"><div style="{{ indicatorLineStyle }}"></div></sc-if>
+
+              <!-- NEW ACTIVITY FORM -->
+              <sc-if value="{{ addingNew }}" hint-placeholder-val="{{ false }}">
+                <div style="background:#fffdfa;border:1px solid #e3d6c6;border-radius:13px;padding:16px;margin-bottom:12px;box-shadow:0 6px 22px rgba(60,40,20,0.08);display:flex;flex-direction:column;gap:13px;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:#7c2d2d;font-weight:600;">New activity</div>
+                  <div style="display:flex;gap:11px;flex-wrap:wrap;">
+                    <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;flex:2;min-width:150px;">Label
+                      <select value="{{ draft.label }}" onChange="{{ onDraftLabel }}" style="width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;cursor:pointer;">
+                        <option value="Early Morning">Early Morning</option><option value="Morning">Morning</option><option value="Coffee">Coffee</option><option value="Lunch">Lunch</option><option value="Afternoon">Afternoon</option><option value="Dinner">Dinner</option><option value="Evening">Evening</option><option value="Late Evening">Late Evening</option><option value="Transit">Transit</option>
+                      </select>
+                    </label>
+                    <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;flex:1;min-width:110px;">Time
+                      <input value="{{ draft.time }}" onChange="{{ onDraftTime }}" placeholder="e.g. 1000h" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:13px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;" style-focus="border-color:#7c2d2d;box-shadow:0 0 0 3px rgba(124,45,45,0.08);" />
+                    </label>
+                  </div>
+                  <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;">Title
+                    <input value="{{ draft.title }}" onChange="{{ onDraftTitle }}" placeholder="What's the plan?" style="width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;" style-focus="border-color:#7c2d2d;box-shadow:0 0 0 3px rgba(124,45,45,0.08);" />
+                  </label>
+                  <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;">Location
+                    <input value="{{ draft.place }}" onChange="{{ onDraftPlace }}" placeholder="Address or area" style="width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;" style-focus="border-color:#7c2d2d;box-shadow:0 0 0 3px rgba(124,45,45,0.08);" />
+                  </label>
+                  <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;">Notes
+                    <textarea value="{{ draft.note }}" onChange="{{ onDraftNote }}" rows="2" placeholder="Hours, tips, reservations\u2026" style="width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;resize:vertical;line-height:1.45;" style-focus="border-color:#7c2d2d;box-shadow:0 0 0 3px rgba(124,45,45,0.08);"></textarea>
+                  </label>
+                  <label style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#a09487;">Booking ref
+                    <input value="{{ draft.ref }}" onChange="{{ onDraftRef }}" placeholder="optional" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:13px;color:#211b17;background:#fff;border:1px solid #e3d6c6;border-radius:8px;padding:9px 11px;outline:none;" style-focus="border-color:#7c2d2d;box-shadow:0 0 0 3px rgba(124,45,45,0.08);" />
+                  </label>
+                  <div style="display:flex;gap:8px;align-items:center;padding-top:2px;">
+                    <button onClick="{{ onSaveEdit }}" style="appearance:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;color:#fff;background:#7c2d2d;border:none;padding:9px 16px;border-radius:8px;">Add activity</button>
+                    <button onClick="{{ onCancelEdit }}" style="appearance:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;color:#6f655b;background:transparent;border:1px solid #e3d6c6;padding:9px 14px;border-radius:8px;">Cancel</button>
+                  </div>
+                </div>
+              </sc-if>
+
+              <!-- empty state -->
+              <sc-if value="{{ dayEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="text-align:center;padding:18px;color:#b3a89b;font-size:13.5px;">No activities yet for this day.</div>
+              </sc-if>
+
+              <!-- add activity trigger -->
+              <sc-if value="{{ showAddActivity }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ onAddActivity }}" style="appearance:none;cursor:pointer;width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;color:#8a7e74;background:transparent;border:1px dashed #d8cab8;border-radius:11px;padding:13px;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:7px;" style-hover="background:#fbf6ef;border-color:#7c2d2d;color:#7c2d2d;">+ Add activity</button>
+              </sc-if>
+            </div>
+          </section>
+        </div>
+        <div style="{{ trashStyle }}" onDragOver="{{ onTrashOver }}" onDragLeave="{{ onTrashLeave }}" onDrop="{{ onTrashDrop }}"><span style="width:22px;height:22px;border-radius:50%;border:2px solid currentColor;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none;">&#10005;</span>Release to delete this card</div>
+      </div>
+    </sc-if>
+
+    <!-- ===== MAP ===== -->
+    <sc-if value="{{ isMap }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;margin-bottom:6px;">
+          <sc-for list="{{ dayList }}" as="d" hint-placeholder-count="8">
+            <button onClick="{{ d.onClick }}" style="{{ d.pillStyle }}">{{ d.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:22px;align-items:stretch;flex-wrap:wrap;">
+          <div style="flex:2 1 440px;min-width:300px;min-height:440px;position:relative;border-radius:16px;overflow:hidden;border:1px solid #e1e3da;background:#eceee7;background-image:linear-gradient(#e1e4da 1px,transparent 1px),linear-gradient(90deg,#e1e4da 1px,transparent 1px);background-size:30px 30px;">
+            <div style="position:absolute;inset:0;background:linear-gradient(125deg,transparent 0%,transparent 38%,#d9e6e8 38%,#d9e6e8 52%,transparent 52%);opacity:0.7;"></div>
+            <div style="position:absolute;left:8%;top:55%;width:30%;height:34%;background:#dde7d6;border-radius:40% 55% 45% 50%;opacity:0.7;"></div>
+            <div style="position:absolute;right:10%;top:8%;width:24%;height:26%;background:#dde7d6;border-radius:50% 45% 55% 40%;opacity:0.6;"></div>
+            <sc-for list="{{ mapStops }}" as="m" hint-placeholder-count="5">
+              <button onClick="{{ m.onSel }}" style="{{ m.pinStyle }}"><span style="{{ m.pinNumStyle }}">{{ m.num }}</span></button>
+            </sc-for>
+            <div style="position:absolute;left:14px;bottom:12px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#8a8f82;background:rgba(255,255,255,0.7);padding:4px 8px;border-radius:6px;">illustrative &mdash; connect a map provider for live pins</div>
+          </div>
+          <div style="flex:1 1 280px;min-width:250px;background:#fffdfa;border:1px solid #ece3d8;border-radius:16px;padding:16px;align-self:flex-start;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#a09487;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px;padding:0 4px;">{{ mapDate }} &middot; Stops</div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <sc-for list="{{ mapStops }}" as="m" hint-placeholder-count="5">
+                <div onClick="{{ m.onSel }}" style="{{ m.itemStyle }}" style-hover="{{ m.itemHover }}">
+                  <span style="{{ m.numBadge }}">{{ m.num }}</span>
+                  <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
+                    <span style="{{ m.chipStyleObj }}">{{ m.label }}</span>
+                    <span style="font-size:13px;font-weight:600;color:#332b24;line-height:1.25;text-wrap:pretty;">{{ m.title }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===== BOOKINGS ===== -->
+    <sc-if value="{{ isBookings }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:680px;display:flex;flex-direction:column;gap:28px;">
+        <sc-for list="{{ bookingGroups }}" as="g" hint-placeholder-count="3">
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#a09487;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:11px;">{{ g.name }}</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <sc-for list="{{ g.items }}" as="b" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:15px;background:#fffdfa;border:1px solid #ece3d8;border-radius:13px;padding:15px 18px;">
+                  <div style="width:38px;height:38px;flex:none;border-radius:10px;background:#f6eceb;color:#7c2d2d;display:flex;align-items:center;justify-content:center;font-size:17px;">{{ b.icon }}</div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:15px;font-weight:700;color:#211b17;letter-spacing:-0.01em;">{{ b.title }}</div>
+                    <div style="font-size:12.5px;color:#8a7e74;margin-top:2px;">{{ b.sub }}</div>
+                  </div>
+                  <span style="{{ b.refStyle }}">{{ b.ref }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ===== SAVED ===== -->
+    <sc-if value="{{ isSaved }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;">
+        <sc-for list="{{ savedList }}" as="p" hint-placeholder-count="5">
+          <div style="background:#fffdfa;border:1px solid #ece3d8;border-radius:14px;overflow:hidden;">
+            <div style="height:118px;background:repeating-linear-gradient(45deg,#efe7dc,#efe7dc 8px,#e8ddcc 8px,#e8ddcc 16px);display:flex;align-items:flex-end;padding:9px;"><span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#a89c8d;background:rgba(255,253,250,0.85);padding:2px 6px;border-radius:4px;">photo</span></div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px;">
+              <span style="{{ p.catStyle }}">{{ p.cat }}</span>
+              <div style="font-size:15px;font-weight:700;color:#211b17;letter-spacing:-0.01em;line-height:1.25;text-wrap:pretty;">{{ p.name }}</div>
+              <div style="font-size:12.5px;color:#8a7e74;line-height:1.4;">{{ p.note }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ===== EXPENSES ===== -->
+    <sc-if value="{{ isExpenses }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:620px;">
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px;">
+          <div style="flex:1 1 180px;background:#7c2d2d;color:#fff;border-radius:14px;padding:18px 20px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;opacity:0.75;">Trip total</div>
+            <div style="font-size:27px;font-weight:800;letter-spacing:-0.02em;margin-top:6px;">{{ expTotal }}</div>
+          </div>
+          <div style="flex:1 1 180px;background:#fffdfa;border:1px solid #ece3d8;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;justify-content:center;gap:7px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:#6f655b;display:inline-flex;align-items:center;gap:7px;"><span style="width:8px;height:8px;border-radius:50%;background:oklch(0.58 0.10 25);"></span>Tristan paid</span><span style="font-family:'JetBrains Mono',monospace;font-weight:600;">{{ expPaidA }}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:#6f655b;display:inline-flex;align-items:center;gap:7px;"><span style="width:8px;height:8px;border-radius:50%;background:oklch(0.58 0.10 235);"></span>Tris paid</span><span style="font-family:'JetBrains Mono',monospace;font-weight:600;">{{ expPaidB }}</span></div>
+          </div>
+        </div>
+        <div style="background:#fffdfa;border:1px solid #ece3d8;border-radius:14px;overflow:hidden;">
+          <sc-for list="{{ expItems }}" as="e" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;border-bottom:1px solid #f2ebe1;">
+              <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
+                <span style="font-size:14px;font-weight:600;color:#211b17;">{{ e.item }}</span>
+                <span style="{{ e.byStyle }}"><span style="{{ e.dotStyle }}"></span>{{ e.by }}</span>
+              </div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:#332b24;white-space:nowrap;">{{ e.amount }}</span>
+            </div>
+          </sc-for>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 18px;background:#faf4ec;">
+            <span style="font-size:13.5px;font-weight:700;color:#7c2d2d;">{{ settleText }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#a09487;">split evenly</span>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;chipStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tonal&quot;,&quot;solid&quot;,&quot;outline&quot;],&quot;default&quot;:&quot;tonal&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;comfortable&quot;,&quot;compact&quot;],&quot;default&quot;:&quot;comfortable&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { tab:'itinerary', day:0, dir:0, expanded:{}, done:{}, mapSel:null, drag:null, dragOver:null, dragOverDay:null, dragTrash:false,
+            days:this.buildDays(), editing:null, draft:null, renamingDay:false, dayTitleDraft:'' };
+
+  newId(){ if(this._uid==null) this._uid=0; return 'a'+(this._uid++); }
+  yen(n){ return '\u00a5'+n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  dayDate(i){ const d=new Date(2026,6,10); d.setDate(d.getDate()+i); return d; }
+  fmtDate(d){ const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return M[d.getMonth()]+' '+d.getDate(); }
+  fmtDow(d){ return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]; }
+  parseInterval(raw){
+    if(!raw) return null;
+    try{
+      const s=String(raw).replace(/~/g,'').trim();
+      const parts=s.split(/[\u2013\u2014\-]/).map(p=>p.trim()).filter(Boolean);
+      const toMin=(tok)=>{ if(!tok) return null; let plus=0; const pm=tok.match(/\+(\d+)/); if(pm) plus=parseInt(pm[1],10)*1440; const m=tok.match(/(\d{1,2})(\d{2})/); if(m) return parseInt(m[1],10)*60+parseInt(m[2],10)+plus; const h=tok.match(/(\d{1,2})\s*h/); if(h) return parseInt(h[1],10)*60+plus; return null; };
+      if(parts.length>=2){ let a=toMin(parts[0]); let b=toMin(parts[1]); if(a==null) return null; if(b==null) b=a+60; if(b<a) b+=1440; return {start:a,end:b}; }
+      const a=toMin(parts[0]); if(a==null) return null; return {start:a, end:a+60};
+    }catch(_){ return null; }
+  }
+
+  buildDays(){
+    const A=(label,time,title,place,note,ref)=>({label,time:time||'',title,place:place||'',note:note||'',ref:ref||''});
+    const days=[
+      {title:'Arrival & East Kyoto', acts:[
+        A('Transit','0125h\u20130910h','Flight SIN \u2192 KIX (Peach MM774)','Changi Airport \u2192 Kansai International Airport','Low-cost overnight hop. Land 0910h.','YND5R3'),
+        A('Morning','1000h','Haruka Express to Kyoto Station; check in','Kyoto Station','~75 min, \u00a53,060/pax. Hotel: OMO5 Gion Kyoto'),
+        A('Coffee','','Kurasu Kyoto Stand','552 Higashiaburanokojicho, Shimogyo Ward, Kyoto','Pour-over specialists near station. 0730\u20131700h. Cash + card'),
+        A('Afternoon','','To-ji Temple \u2014 tallest wooden pagoda in Japan','1 Kujocho, Minami Ward, Kyoto','Spacious & calm vs crowded temples. 0800\u20131700h'),
+        A('Dinner','','Gion / Pontocho area \u2014 stroll & dinner','Gion, Higashiyama Ward, Kyoto','Atmospheric old streets; many izakaya & restaurants'),
+      ]},
+      {title:'Arashiyama & Railway Museum', acts:[
+        A('Early Morning','','Arashiyama Bamboo Forest','Sagaogurayama Tabuchiyamacho, Ukyo Ward, Kyoto','Free. Best early morning \u2014 gets very crowded mid-day'),
+        A('Early Morning','','Tenryu-ji Temple & garden','68 Sagatenryuji Susukinobabacho, Ukyo Ward, Kyoto','UNESCO site; pond garden. 0830\u20131700h'),
+        A('Coffee','','% Arabica Kyoto Arashiyama','Sagatenryuji Susukinobabacho 3-47, Ukyo Ward, Kyoto','Iconic riverside espresso bar'),
+        A('Afternoon','','Kyoto Railway Museum','Kankijicho, Shimogyo Ward, Kyoto','CLOSED WEDNESDAYS. Steam loco rides. 1000\u20131700h'),
+        A('Dinner','','Kyoto Station area \u2014 ramen','Kyoto Station Building, Shimogyo Ward, Kyoto','Kyoto Ramen Koji on 10F'),
+      ]},
+      {title:'Day trip to Uji', acts:[
+        A('Morning','','Head to Uji \u2014 matcha town','Uji, Kyoto','JR Nara Line, ~20\u201330 min'),
+        A('Morning','','Byodo-in Temple (the \u00a510 coin temple)','Renge-116 Uji, Kyoto','UNESCO site. 0830\u20131730h'),
+        A('Afternoon','','Byodo-in Omotesando \u2014 historic tea-shop street','Renge, Uji, Kyoto','Centuries-old tea shops; matcha tastings. Most shops 1100\u20131700h'),
+        A('Afternoon','','Itoh Kyuemon \u2014 matcha sweets & tea','Renge-31-1 Uji, Kyoto','Matcha ice cream & parfaits. 0930\u20131730h'),
+        A('Evening','','Fushimi Inari Taisha \u2014 torii gates','68 Fukakusa Yabunouchicho, Fushimi Ward, Kyoto','Free, open 24h. Go late, quieter'),
+      ]},
+      {title:'Ryoan-ji & Nishiki \u2192 Osaka', acts:[
+        A('Coffee','','Goodman Roaster Kyoto','Yadacho 115-2, Shimogyo Ward, Kyoto','Flat white & carrot cake. Cash only. 0800\u20132030h'),
+        A('Morning','','Ryoan-ji \u2014 famous Zen rock garden','13 Ryoanji Goryonoshitacho, Ukyo Ward, Kyoto','Calm, meditative. \u00a5600. 0800\u20131700h'),
+        A('Lunch','','Nishiki Market \u2014 food-stall grazing','Higashiuoyacho, Nakagyo Ward, Kyoto','Many cash-only stalls; no eating-while-walking'),
+        A('Transit','','Head to Osaka; check in','Osaka','~29 min via JR Special Rapid. Hotel TBC'),
+      ]},
+      {title:'Osaka Castle & Edo History', acts:[
+        A('Morning','','Osaka Castle & Park','1-1 Osakajo, Chuo Ward, Osaka','Peaceful early AM. 0900\u20131700h (last entry 1630)'),
+        A('Coffee','','Cafe Tales \u2014 Honmachi','Kyutaromachi 2-5-19, Chuo Ward, Osaka','French toast highlight. 0800\u20131800h'),
+        A('Afternoon','','Osaka Museum of Housing & Living','Tenjinbashi 6-4-20, Kita Ward, Osaka','CLOSED TUESDAYS. Kimono rental option. 1000\u20131700h'),
+        A('Evening','','Dotonbori / Shinsaibashi \u2014 dinner & lights','Dotonbori, Chuo Ward, Osaka','Takoyaki, okonomiyaki, neon'),
+      ]},
+      {title:'Day Trip: Kobe', acts:[
+        A('Transit','','Travel to Kobe','\u2014','JR Special Rapid (Kobe Line), ~22 min'),
+        A('Morning','','Nunobiki Herb Gardens & Ropeway','Kitanocho 1-4-3, Chuo Ward, Kobe','Ropeway by Shin-Kobe stn. 0930\u20131645h'),
+        A('Morning','','Kitano Ijinkan \u2014 historic Western houses','Kitanocho 2-3, Chuo Ward, Kobe','Quiet streetscape + famous Starbucks. 0900\u20131700h'),
+        A('Lunch','','Kobe beef teppanyaki (reserve ahead)','Kitanagasadori 1-9-4, Chuo Ward, Kobe','Kishokichi or Kobe Beef Amami. Wrap by ~1300h'),
+        A('Afternoon','~1400h','Maiko Marine Promenade & Akashi-Kaikyo Bridge','Higashimaikocho 4-2051, Tarumi Ward, Kobe','Glass walkway over sea. Till 1800h'),
+        A('Afternoon','~1600h','Kobe Harborland / umie','Higashikawasakicho 1-7-2, Chuo Ward, Kobe','Indoor mall, Ferris wheel. Till 2000h'),
+        A('Transit','','Travel back to Osaka','Osaka','JR Special Rapid, ~22 min'),
+      ]},
+      {title:'Markets & teamLab', acts:[
+        A('Morning','','Kuromon Ichiba Market \u2014 seafood & street food','Nipponbashi 2-4-1, Chuo Ward, Osaka','Best before 1300h. 0900\u20131800h'),
+        A('Coffee','','LiLo Coffee Roasters \u2014 Shinsaibashi','Nishishinsaibashi 1-10-28, Chuo Ward, Osaka','20+ beans; cash only. From 1100h'),
+        A('Afternoon','','Shinsaibashi-suji \u2014 last-minute shopping','Shinsaibashisuji, Chuo Ward, Osaka','Covered arcade \u2014 indoor, heat-friendly'),
+        A('Evening','~1945h','teamLab Botanical Garden Osaka','Nagaikoen 1-23, Higashisumiyoshi Ward, Osaka','Book timed tickets'),
+      ]},
+      {title:'Departure', acts:[
+        A('Morning','','Free morning \u2014 last coffee / packing','Osaka','\u2014'),
+        A('Coffee','','Notequal Coffee \u2014 Honmachi','Kyutaromachi 2-5-18, Chuo Ward, Osaka','Customisable single-origin blends. From 0800h'),
+        A('Afternoon','~1400h','Transfer to Kansai Airport (KIX)','Kansai International Airport','~75 min from city + check-in'),
+        A('Transit','1825h\u20130005h+1','Flight KIX \u2192 SIN (Peach MM773)','Kansai International Airport \u2192 Changi Airport','Booking ref: YND5R3. 6h40m','YND5R3'),
+      ]},
+    ];
+    days.forEach(d=>d.acts.forEach(a=>{ a.id=this.newId(); }));
+    return days;
+  }
+
+  chip(label, style){
+    const HUE={'Early Morning':280,'Morning':75,'Coffee':45,'Lunch':150,'Afternoon':235,'Dinner':25,'Evening':330,'Late Evening':270,'Transit':205};
+    const h=HUE[label]!=null?HUE[label]:205;
+    if(style==='solid') return {bg:'oklch(0.56 0.11 '+h+')', fg:'#fff', border:'1px solid transparent'};
+    if(style==='outline') return {bg:'transparent', fg:'oklch(0.46 0.10 '+h+')', border:'1px solid oklch(0.80 0.07 '+h+')'};
+    return {bg:'oklch(0.95 0.035 '+h+')', fg:'oklch(0.44 0.10 '+h+')', border:'1px solid transparent'};
+  }
+  chipObj(label){
+    const cs=this.chip(label, this.props.chipStyle||'tonal');
+    return {display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:'999px',fontSize:'10.5px',fontWeight:700,letterSpacing:'0.02em',textTransform:'uppercase',fontFamily:"'Hanken Grotesk',sans-serif",background:cs.bg,color:cs.fg,border:cs.border,whiteSpace:'nowrap',lineHeight:1.4};
+  }
+
+  setTab(t){ this.setState({tab:t, editing:null, draft:null, renamingDay:false}); }
+  setDay(i){ this.setState({day:i, editing:null, draft:null, renamingDay:false}); }
+  setDir(i){ this.setState({dir:i}); }
+  toggleDone(id){ this.setState(s=>({done:Object.assign({},s.done,{[id]:!s.done[id]})})); }
+  toggleExpand(id){ this.setState(s=>({expanded:Object.assign({},s.expanded,{[id]:!s.expanded[id]})})); }
+
+  cloneDays(){ return this.state.days.map(d=>({title:d.title, acts:d.acts.slice()})); }
+  startNew(){ this.setState({editing:{dayIdx:this.state.day, actId:null}, draft:{label:'Morning',time:'',title:'',place:'',note:'',ref:''}, renamingDay:false}); }
+  startEdit(dayIdx, a){ this.setState({editing:{dayIdx, actId:a.id}, draft:{label:a.label,time:a.time,title:a.title,place:a.place,note:a.note,ref:a.ref}, renamingDay:false}); }
+  cancelEdit(){ this.setState({editing:null, draft:null}); }
+  setDraft(f,v){ this.setState(s=>({draft:Object.assign({},s.draft,{[f]:v})})); }
+  saveEdit(){
+    const {editing,draft}=this.state;
+    if(!editing || !draft) return;
+    if(!draft.title || !draft.title.trim()) return;
+    const nd=this.cloneDays(); const day=nd[editing.dayIdx]; if(!day) return;
+    const rec={label:draft.label,time:(draft.time||'').trim(),title:draft.title.trim(),place:(draft.place||'').trim(),note:(draft.note||'').trim(),ref:(draft.ref||'').trim()};
+    if(editing.actId==null){ day.acts.push(Object.assign({id:this.newId()}, rec)); }
+    else { const i=day.acts.findIndex(a=>a.id===editing.actId); if(i>=0) day.acts[i]=Object.assign({},day.acts[i],rec); }
+    this.setState({days:nd, editing:null, draft:null});
+  }
+  deleteAct(){
+    const {editing}=this.state; if(!editing || editing.actId==null) return;
+    const nd=this.cloneDays(); const day=nd[editing.dayIdx]; if(!day) return;
+    day.acts=day.acts.filter(a=>a.id!==editing.actId);
+    this.setState({days:nd, editing:null, draft:null});
+  }
+  addDay(){
+    const nd=this.cloneDays(); nd.push({title:'New day', acts:[]});
+    this.setState({days:nd, day:nd.length-1, tab:'itinerary', editing:null, draft:null, renamingDay:true, dayTitleDraft:'New day'});
+  }
+  deleteDay(idx){
+    if(this.state.days.length<=1) return;
+    if(typeof window!=='undefined' && window.confirm && !window.confirm('Delete this day and all its activities?')) return;
+    const nd=this.state.days.slice(0,idx).concat(this.state.days.slice(idx+1));
+    const newDay=Math.max(0, Math.min(this.state.day, nd.length-1));
+    this.setState({days:nd, day:newDay, editing:null, draft:null, renamingDay:false});
+  }
+  startRenameDay(){ this.setState({renamingDay:true, dayTitleDraft:this.state.days[this.state.day].title}); }
+  setDayTitle(v){ this.setState({dayTitleDraft:v}); }
+  saveRenameDay(){
+    const v=(this.state.dayTitleDraft||'').trim()||'Untitled day';
+    const nd=this.cloneDays(); nd[this.state.day].title=v;
+    this.setState({days:nd, renamingDay:false});
+  }
+
+  dragStart(actId, dayIdx, e){ try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain', actId); }catch(_){}
+    this.setState({drag:{actId,dayIdx}, editing:null, draft:null, renamingDay:false}); }
+  dragEnd(){ this.setState({drag:null, dragOver:null, dragOverDay:null, dragTrash:false}); }
+  cardOver(index, e){ e.preventDefault(); if(!this.state.drag) return; const r=e.currentTarget.getBoundingClientRect(); const ins=(e.clientY > r.top + r.height/2) ? index+1 : index; const o=this.state.dragOver; if(o && o.dayIdx===this.state.day && o.index===ins && this.state.dragOverDay==null) return; this.setState({dragOver:{dayIdx:this.state.day, index:ins}, dragOverDay:null}); }
+  cardDrop(e){ if(e&&e.preventDefault)e.preventDefault(); const d=this.state.drag; if(!d) return; const o=this.state.dragOver; this.moveActivity(d.actId, d.dayIdx, this.state.day, o?o.index:null); }
+  dayOver(i, e){ e.preventDefault(); if(!this.state.drag) return; if(this.state.dragOverDay!==i || this.state.dragOver) this.setState({dragOverDay:i, dragOver:null}); }
+  dayDrop(i, e){ e.preventDefault(); const d=this.state.drag; if(!d) return; this.moveActivity(d.actId, d.dayIdx, i, null); }
+  trashDrop(){ const d=this.state.drag; if(!d) return; const nd=this.cloneDays(); const day=nd[d.dayIdx]; if(day) day.acts=day.acts.filter(a=>a.id!==d.actId); this.setState({days:nd, drag:null, dragOver:null, dragOverDay:null, dragTrash:false}); }
+  moveActivity(actId, fromDay, toDay, toIndex){ const nd=this.cloneDays(); const from=nd[fromDay]; if(!from) return; const idx=from.acts.findIndex(a=>a.id===actId); if(idx<0) return; const card=from.acts.splice(idx,1)[0]; let ins=(toIndex==null)?nd[toDay].acts.length:toIndex; if(toDay===fromDay && ins>idx) ins--; if(ins<0) ins=0; if(ins>nd[toDay].acts.length) ins=nd[toDay].acts.length; nd[toDay].acts.splice(ins,0,card); this.setState({days:nd, drag:null, dragOver:null, dragOverDay:null, dragTrash:false}); }
+
+  renderVals(){
+    const s=this.state, days=s.days;
+
+    const TABS=[['itinerary','Itinerary'],['map','Map'],['bookings','Bookings'],['saved','Saved'],['expenses','Expenses']];
+    const tabs=TABS.map(([k,label])=>{ const active=s.tab===k; return { label, onClick:()=>this.setTab(k),
+      style:{appearance:'none',border:'none',background:'transparent',cursor:'pointer',fontFamily:"'Hanken Grotesk',sans-serif",fontSize:'14px',fontWeight:active?700:500,color:active?'#211b17':'#9a8f84',padding:'14px 2px',borderBottom:active?'2px solid #7c2d2d':'2px solid transparent',marginBottom:'-1px',transition:'color .15s',whiteSpace:'nowrap'},
+      hover:{color:active?'#211b17':'#5f554c'} }; });
+
+    const DIRS=['Timeline','Cards','Editorial'];
+    const dirBtns=DIRS.map((name,i)=>{ const active=s.dir===i; return { name, onClick:()=>this.setDir(i),
+      style:{appearance:'none',border:'none',cursor:'pointer',fontFamily:"'Hanken Grotesk',sans-serif",fontSize:'12.5px',fontWeight:600,color:active?'#211b17':'#8a7e74',background:active?'#ffffff':'transparent',boxShadow:active?'0 1px 2px rgba(40,30,20,0.08)':'none',padding:'6px 13px',borderRadius:'7px',transition:'all .15s'},
+      hover:{color:'#211b17'} }; });
+
+    const dayList=days.map((d,i)=>{ const dd=this.dayDate(i); const total=d.acts.length; const done=d.acts.filter(a=>s.done[a.id]).length; const active=s.day===i; const dropHi=!!s.drag && s.dragOverDay===i;
+      return { label:'Day '+(i+1), date:this.fmtDate(dd), dow:this.fmtDow(dd), title:d.title, meta:done+'/'+total, onClick:()=>this.setDay(i), onDragOver:(e)=>this.dayOver(i,e), onDrop:(e)=>this.dayDrop(i,e),
+        style:{display:'flex',flexDirection:'column',gap:'3px',width:'100%',textAlign:'left',appearance:'none',cursor:'pointer',padding:'11px 12px 11px 13px',borderRadius:'9px',border:'1px solid '+(dropHi?'#7c2d2d':(active?'#ecdfd0':'transparent')),background:dropHi?'#faf0ee':(active?'#ffffff':'transparent'),borderLeft:active?'3px solid #7c2d2d':'3px solid transparent',boxShadow:active?'0 1px 2px rgba(40,30,20,0.05)':'none',transition:'all .15s'},
+        hover:{background:active?'#ffffff':'rgba(124,45,45,0.04)'},
+        labelStyle:{fontFamily:"'Hanken Grotesk',sans-serif",fontSize:'13.5px',fontWeight:700,color:active?'#211b17':'#4a4138'},
+        dateStyle:{fontFamily:"'JetBrains Mono',monospace",fontSize:'10px',letterSpacing:'-0.02em',color:'#a89c8f',textTransform:'uppercase'},
+        titleStyle:{fontFamily:"'Hanken Grotesk',sans-serif",fontSize:'11.5px',color:'#8a7e74',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'},
+        metaStyle:{fontFamily:"'JetBrains Mono',monospace",fontSize:'10px',color:(done===total&&total>0)?'#5b8a5b':'#b3a89b',fontWeight:600},
+        pillStyle:{appearance:'none',cursor:'pointer',whiteSpace:'nowrap',padding:'7px 12px',borderRadius:'999px',border:'1px solid '+(active?'#7c2d2d':'#e6ddd2'),background:active?'#7c2d2d':'#fff',color:active?'#fff':'#6f655b',fontFamily:"'Hanken Grotesk',sans-serif",fontSize:'12px',fontWeight:600,transition:'all .15s'} }; });
+
+    const day=days[s.day]; const curD=this.dayDate(s.day);
+    const tCfg=[
+      {spine:true, thumb:false, titleSize:'16px',  cardBg:'transparent', cardBorder:'1px solid transparent', cardRadius:'0',  cardPad:'1px 0 18px 0', rowMargin:'0'},
+      {spine:false,thumb:false, titleSize:'15.5px',cardBg:'#ffffff',     cardBorder:'1px solid #ece4d9',      cardRadius:'12px',cardPad:'14px 16px',   rowMargin:'10px'},
+      {spine:false,thumb:true,  titleSize:'20px',  cardBg:'transparent', cardBorder:'1px solid transparent', cardRadius:'0',  cardPad:'2px 0 6px 0',  rowMargin:'26px'},
+    ][s.dir];
+    if(this.props.density==='compact'){ tCfg.rowMargin = s.dir===1?'6px':'0'; tCfg.cardPad = s.dir===1?'10px 13px':(s.dir===0?'1px 0 12px 0':'2px 0 6px 0'); }
+    const t={ spine:tCfg.spine, thumb:tCfg.thumb, rowStyle:{display:'flex',gap:'12px',alignItems:'flex-start',marginBottom:tCfg.rowMargin,position:'relative'} };
+
+    const acts=day.acts;
+    const ivals=acts.map(a=>this.parseInterval(a.time));
+    const conflicts=acts.map(()=>false);
+    for(let x=0;x<acts.length;x++){ for(let y=x+1;y<acts.length;y++){ const A=ivals[x], B=ivals[y]; if(A&&B && A.start<B.end && B.start<A.end){ conflicts[x]=true; conflicts[y]=true; } } }
+    const activities=acts.map((a,i)=>{ const done=!!s.done[a.id], exp=!!s.expanded[a.id]; const isLast=i===acts.length-1; const hasNote=a.note && a.note!=='\u2014'; const editing=!!(s.editing && s.editing.actId===a.id); const dragging=!!(s.drag && s.drag.actId===a.id); const cf=conflicts[i];
+      return { time:a.time, hasTime:!!a.time, noTime:!a.time, label:a.label, title:a.title, place:a.place, hasPlace:!!a.place, note:a.note, hasNote, ref:a.ref, hasRef:!!a.ref,
+        isDone:done, isExpanded:exp, isEditing:editing, notEditing:!editing, showLine:(s.dir===0 && !isLast),
+        hasConflict:cf, conflictTitle:'Overlaps in time with another activity on this day',
+        timeStyle:{fontFamily:"'JetBrains Mono',monospace",fontSize:'10.5px',letterSpacing:'-0.03em',whiteSpace:'nowrap',lineHeight:1.3,display:'inline-block',color:cf?'#c0392b':'#8a7e74',fontWeight:cf?700:400},
+        onToggle:()=>this.toggleDone(a.id), onExpand:()=>this.toggleExpand(a.id),
+        onEdit:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.startEdit(s.day,a); },
+        onMap:()=>this.setState({tab:'map', mapSel:a.id}),
+        rowStyle:Object.assign({}, t.rowStyle, {cursor:'grab', opacity:dragging?0.4:1}),
+        onDragStart:(e)=>this.dragStart(a.id, s.day, e),
+        onCardDragOver:(e)=>this.cardOver(i, e),
+        onCardDrop:(e)=>this.cardDrop(e),
+        onDragEnd:()=>this.dragEnd(),
+        showIndicatorBefore:!!(s.drag && s.dragOver && s.dragOver.dayIdx===s.day && s.dragOver.index===i),
+        dotStyle:{width:'20px',height:'20px',borderRadius:'50%',border:'2px solid '+(done?'#7c2d2d':'#cdbfb0'),background:done?'#7c2d2d':'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0,flex:'none',transition:'all .15s',marginTop:'1px'},
+        dotHover:{borderColor:'#7c2d2d'},
+        contentStyle:{background:tCfg.cardBg,border:tCfg.cardBorder,borderRadius:tCfg.cardRadius,padding:tCfg.cardPad,flex:1,minWidth:0,display:'flex',gap:'14px',alignItems:'flex-start',transition:'border-color .15s, box-shadow .15s'},
+        contentHover: s.dir===1?{borderColor:'#ddd0c0',boxShadow:'0 2px 12px rgba(40,30,20,0.05)'}:{},
+        chipStyleObj:this.chipObj(a.label),
+        titleStyle:{fontFamily:"'Hanken Grotesk',sans-serif",fontWeight:600,fontSize:tCfg.titleSize,color:'#211b17',lineHeight:1.3,letterSpacing:'-0.01em',textDecoration:done?'line-through':'none',opacity:done?0.4:1,margin:0,textWrap:'pretty'} };
+    });
+    const dDone=acts.filter(a=>s.done[a.id]).length;
+    const progressText=dDone+' / '+acts.length+' done';
+    const progressPct=acts.length?Math.round(dDone/acts.length*100):0;
+    const progressBarStyle={height:'100%',width:progressPct+'%',background:'#7c2d2d',borderRadius:'999px',transition:'width .3s ease'};
+
+    const COORDS=[[24,28],[43,20],[60,34],[75,24],[33,52],[54,60],[77,55],[28,74],[48,82],[67,76],[40,40],[62,46]];
+    const mapStops=acts.map((a,i)=>{ const sel=s.mapSel===a.id; const c=COORDS[i%COORDS.length];
+      return { num:i+1, title:a.title, label:a.label, onSel:()=>this.setState({mapSel:a.id}),
+        pinStyle:{position:'absolute',left:c[0]+'%',top:c[1]+'%',transform:'translate(-50%,-50%)',width:'27px',height:'27px',borderRadius:'50% 50% 50% 2px',rotate:'45deg',background:sel?'#7c2d2d':'#fff',border:'2px solid #7c2d2d',cursor:'pointer',boxShadow:'0 3px 8px rgba(60,30,20,0.22)',zIndex:sel?6:2,transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center'},
+        pinNumStyle:{rotate:'-45deg',fontFamily:"'JetBrains Mono',monospace",fontSize:'11px',fontWeight:700,color:sel?'#fff':'#7c2d2d'},
+        itemStyle:{display:'flex',gap:'11px',alignItems:'center',padding:'9px 10px',borderRadius:'9px',cursor:'pointer',background:sel?'#f4eae9':'transparent',border:'1px solid '+(sel?'#ecdcda':'transparent'),transition:'all .12s'},
+        itemHover:{background:sel?'#f4eae9':'rgba(124,45,45,0.04)'},
+        numBadge:{width:'22px',height:'22px',flex:'none',borderRadius:'50%',background:sel?'#7c2d2d':'#efe7dc',color:sel?'#fff':'#7c2d2d',fontFamily:"'JetBrains Mono',monospace",fontSize:'11px',fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'},
+        chipStyleObj:this.chipObj(a.label) }; });
+
+    const bookingGroups=[
+      {name:'Flights', items:[
+        {icon:'\u2708', title:'Peach MM774', sub:'SIN \u2192 KIX \u00b7 Jul 10 \u00b7 0125h', ref:'YND5R3', tbc:false},
+        {icon:'\u2708', title:'Peach MM773', sub:'KIX \u2192 SIN \u00b7 Jul 17 \u00b7 1825h', ref:'YND5R3', tbc:false},
+      ]},
+      {name:'Stays', items:[
+        {icon:'\u25C9', title:'OMO5 Gion Kyoto', sub:'Jul 10\u201313 \u00b7 3 nights \u00b7 Kyoto', ref:'#HK29384', tbc:false},
+        {icon:'\u25C9', title:'Stay in Osaka', sub:'Jul 13\u201317 \u00b7 4 nights \u00b7 Osaka', ref:'TBC', tbc:true},
+      ]},
+      {name:'Transport', items:[ {icon:'\u25C8', title:'Rental car', sub:'Jul 12 \u00b7 Uji day trip', ref:'#RC77210', tbc:false} ]},
+    ].map(g=>({ name:g.name, items:g.items.map(it=>({ icon:it.icon, title:it.title, sub:it.sub, ref:it.ref,
+      refStyle:{fontFamily:"'JetBrains Mono',monospace",fontSize:'11.5px',fontWeight:600,letterSpacing:'0.02em',color:it.tbc?'#b08968':'#7c2d2d',background:it.tbc?'#f6ecde':'#f6eceb',padding:'4px 9px',borderRadius:'6px',whiteSpace:'nowrap'} })) }));
+
+    const CAT={Food:25,Sight:150,Shop:235};
+    const savedList=[
+      {name:'% Arabica Kyoto Arashiyama', cat:'Food', note:'Riverside espresso bar'},
+      {name:'Kobe Beef Amami', cat:'Food', note:'Reserve ahead for teppanyaki'},
+      {name:'Nunobiki Herb Gardens', cat:'Sight', note:'Ropeway up the mountain'},
+      {name:'Shinsaibashi-suji', cat:'Shop', note:'Covered arcade'},
+      {name:'Kuromon Ichiba Market', cat:'Food', note:'Go before 1pm'},
+    ].map(p=>{ const h=CAT[p.cat]; return { name:p.name, cat:p.cat, note:p.note,
+      catStyle:{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:'999px',fontSize:'10px',fontWeight:700,letterSpacing:'0.04em',textTransform:'uppercase',fontFamily:"'Hanken Grotesk',sans-serif",background:'oklch(0.95 0.035 '+h+')',color:'oklch(0.44 0.10 '+h+')'} }; });
+
+    const raw=[
+      {item:'Haruka Express tickets', amt:6120, by:'Tristan'},
+      {item:'OMO5 Gion Kyoto (3 nights)', amt:54000, by:'Tris'},
+      {item:'Kobe beef lunch', amt:18400, by:'Tristan'},
+      {item:'teamLab tickets (\u00d72)', amt:6800, by:'Tris'},
+      {item:'Rental car (1 day)', amt:9500, by:'Tristan'},
+    ];
+    const byColor={Tristan:'oklch(0.58 0.10 25)', Tris:'oklch(0.58 0.10 235)'};
+    const expItems=raw.map(r=>({ item:r.item, by:r.by, amount:this.yen(r.amt),
+      byStyle:{display:'inline-flex',alignItems:'center',gap:'6px',fontSize:'12.5px',fontWeight:600,color:'#5f554c',fontFamily:"'Hanken Grotesk',sans-serif"},
+      dotStyle:{width:'8px',height:'8px',borderRadius:'50%',background:byColor[r.by]} }));
+    const total=raw.reduce((x,r)=>x+r.amt,0);
+    const paidA=raw.filter(r=>r.by==='Tristan').reduce((x,r)=>x+r.amt,0);
+    const paidB=raw.filter(r=>r.by==='Tris').reduce((x,r)=>x+r.amt,0);
+    const share=total/2; const diff=Math.round(Math.abs(paidA-share));
+    const settleText = paidA<share ? 'Tristan owes Tris '+this.yen(diff) : 'Tris owes Tristan '+this.yen(diff);
+
+    const sd=this.dayDate(0), ed=this.dayDate(days.length-1);
+    let range = sd.getMonth()===ed.getMonth() ? this.fmtDate(sd)+'\u2013'+ed.getDate() : this.fmtDate(sd)+'\u2013'+this.fmtDate(ed);
+    const tripMeta=(range+' \u00b7 '+days.length+' DAYS').toUpperCase();
+
+    const draft=s.draft||{label:'Morning',time:'',title:'',place:'',note:'',ref:''};
+    const addingNew=!!(s.editing && s.editing.actId==null && s.editing.dayIdx===s.day);
+    const dragActive=!!s.drag;
+    const indicatorAtEnd=!!(s.drag && s.dragOver && s.dragOver.dayIdx===s.day && s.dragOver.index===acts.length);
+    const indicatorLineStyle={height:'0',borderTop:'2px solid #7c2d2d',borderRadius:'2px',margin:'-2px 0 10px 122px',boxShadow:'0 0 0 2px rgba(124,45,45,0.08)'};
+    const trashHot=s.dragTrash;
+    const trashStyle={position:'fixed',left:'50%',bottom:'26px',transform:trashHot?'translateX(-50%) scale(1.04)':'translateX(-50%)',zIndex:60,display:dragActive?'flex':'none',alignItems:'center',gap:'11px',padding:'14px 24px',borderRadius:'14px',fontFamily:"'Hanken Grotesk',sans-serif",fontSize:'13.5px',fontWeight:700,border:'2px dashed '+(trashHot?'#7c2d2d':'#e0b3a8'),background:trashHot?'#7c2d2d':'rgba(255,253,250,0.97)',color:trashHot?'#fff':'#b1452f',boxShadow:trashHot?'0 10px 34px rgba(124,45,45,0.34)':'0 8px 24px rgba(60,40,20,0.14)',transition:'transform .15s, background .15s, color .15s, box-shadow .15s',backdropFilter:'blur(4px)'};
+    const onListOver=(e)=>{ if(this.state.drag) e.preventDefault(); };
+    const onListDrop=(e)=>{ e.preventDefault(); this.cardDrop(e); };
+    const onTrashOver=(e)=>{ e.preventDefault(); if(!this.state.dragTrash) this.setState({dragTrash:true}); };
+    const onTrashLeave=()=>{ if(this.state.dragTrash) this.setState({dragTrash:false}); };
+    const onTrashDrop=(e)=>{ e.preventDefault(); this.trashDrop(); };
+
+    return {
+      tabs, isItin:s.tab==='itinerary', isMap:s.tab==='map', isBookings:s.tab==='bookings', isSaved:s.tab==='saved', isExpenses:s.tab==='expenses',
+      tripMeta, dirBtns, dayList, onAddDay:()=>this.addDay(),
+      curNum:'Day '+(s.day+1), curTitle:day.title, curDate:this.fmtDate(curD), curDow:this.fmtDow(curD),
+      renamingDay:s.renamingDay, notRenamingDay:!s.renamingDay, dayTitleDraft:s.dayTitleDraft,
+      onStartRename:()=>this.startRenameDay(), onDayTitleInput:(e)=>this.setDayTitle(e.target.value), onSaveRename:()=>this.saveRenameDay(),
+      canDeleteDay:days.length>1, onDeleteDay:()=>this.deleteDay(s.day),
+      t, activities, progressText, progressPct, progressBarStyle,
+      dragActive, indicatorAtEnd, indicatorLineStyle, trashStyle, onListOver, onListDrop, onTrashOver, onTrashLeave, onTrashDrop,
+      dayEmpty: acts.length===0 && !addingNew, showAddActivity: !addingNew && !(s.editing && s.editing.actId!=null && s.editing.dayIdx===s.day),
+      onAddActivity:()=>this.startNew(),
+      draft, addingNew,
+      onDraftLabel:(e)=>this.setDraft('label',e.target.value), onDraftTime:(e)=>this.setDraft('time',e.target.value),
+      onDraftTitle:(e)=>this.setDraft('title',e.target.value), onDraftPlace:(e)=>this.setDraft('place',e.target.value),
+      onDraftNote:(e)=>this.setDraft('note',e.target.value), onDraftRef:(e)=>this.setDraft('ref',e.target.value),
+      onSaveEdit:()=>this.saveEdit(), onCancelEdit:()=>this.cancelEdit(), onDeleteAct:()=>this.deleteAct(),
+      mapStops, mapDate:this.fmtDate(curD)+' \u00b7 '+this.fmtDow(curD),
+      bookingGroups, savedList,
+      expItems, expTotal:this.yen(total), expPaidA:this.yen(paidA), expPaidB:this.yen(paidB), settleText,
+    };
+  }
+}
+</script>
+</body>
+</html>
