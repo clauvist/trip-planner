@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Trip {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  startDate DateTime @db.Date
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     Member[]
+  days        Day[]
+  bookings    Booking[]
+  savedPlaces SavedPlace[]
+  expenses    Expense[]
+}
+
+model Member {
+  id     String @id @default(cuid())
+  tripId String
+  trip   Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  name   String
+  hue    Int
+  order  Int
+
+  expenses Expense[]
+
+  @@index([tripId, order])
+}
+
+model Day {
+  id     String @id @default(cuid())
+  tripId String
+  trip   Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  title  String
+  order  Int
+
+  activities Activity[]
+
+  @@index([tripId, order])
+}
+
+enum ActivityLabel {
+  EARLY_MORNING
+  MORNING
+  COFFEE
+  LUNCH
+  AFTERNOON
+  DINNER
+  EVENING
+  LATE_EVENING
+  TRANSIT
+}
+
+model Activity {
+  id    String        @id @default(cuid())
+  dayId String
+  day   Day           @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  order Int
+
+  label ActivityLabel
+  time  String        @default("")
+  title String
+  place String        @default("")
+  note  String        @default("")
+  ref   String        @default("")
+  done  Boolean       @default(false)
+
+  @@index([dayId, order])
+}
+
+model Booking {
+  id        String  @id @default(cuid())
+  tripId    String
+  trip      Trip    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  groupName String
+  order     Int
+  icon      String
+  title     String
+  sub       String
+  ref       String
+  tbc       Boolean @default(false)
+
+  @@index([tripId, order])
+}
+
+enum SavedCategory {
+  FOOD
+  SIGHT
+  SHOP
+}
+
+model SavedPlace {
+  id       String        @id @default(cuid())
+  tripId   String
+  trip     Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  order    Int
+  name     String
+  category SavedCategory
+  note     String
+
+  @@index([tripId, order])
+}
+
+model Expense {
+  id        String @id @default(cuid())
+  tripId    String
+  trip      Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  order     Int
+  item      String
+  amountYen Int
+  paidById  String
+  paidBy    Member @relation(fields: [paidById], references: [id])
+
+  @@index([tripId, order])
+}

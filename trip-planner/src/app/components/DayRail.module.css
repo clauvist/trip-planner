@@ -1,0 +1,10 @@
+.rail {
+  position: sticky;
+  top: 118px;
+}
+
+@media (max-width: 760px) {
+  .rail {
+    position: static;
+  }
+}
