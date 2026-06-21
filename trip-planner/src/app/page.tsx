@@ -1,7 +1,7 @@
-import { getFullTripBySlug } from "@/lib/trip";
-import { TripApp } from "./trip-app";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/dal";
 
 export default async function Home() {
-  const trip = await getFullTripBySlug("kyoto-osaka");
-  return <TripApp initialTrip={trip} />;
+  const user = await getCurrentUser();
+  redirect(user ? "/trips" : "/login");
 }
