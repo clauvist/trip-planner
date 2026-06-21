@@ -22,7 +22,17 @@ import {
 } from "./actions";
 import type { Tab, ActivityDraft, EditingState } from "./types";
 
-export function TripApp({ initialTrip }: { initialTrip: FullTrip }) {
+export function TripApp({
+  initialTrip,
+  currentUsername,
+  isAdmin,
+  isTripLeader,
+}: {
+  initialTrip: FullTrip;
+  currentUsername: string;
+  isAdmin: boolean;
+  isTripLeader: boolean;
+}) {
   const [trip, setTrip] = useState(initialTrip);
   const [tab, setTab] = useState<Tab>("itinerary");
   const [dir, setDir] = useState(0);
@@ -238,7 +248,14 @@ export function TripApp({ initialTrip }: { initialTrip: FullTrip }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f6f1ea" }}>
-      <Header trip={trip} tab={tab} onChangeTab={changeTab} />
+      <Header
+        trip={trip}
+        tab={tab}
+        onChangeTab={changeTab}
+        currentUsername={currentUsername}
+        isAdmin={isAdmin}
+        isTripLeader={isTripLeader}
+      />
       <div style={{ maxWidth: 1180, margin: "0 auto", padding: "24px 28px 64px 28px" }}>
         {tab === "itinerary" && (
           <ItineraryTab
