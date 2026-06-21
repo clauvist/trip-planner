@@ -81,11 +81,13 @@ export async function resetUserPassword(userId: string, formData: FormData): Pro
 
 export async function grantTripAccess(userId: string, tripId: string): Promise<void> {
   await requireAdmin();
-  const count = await prisma.tripMember.count({ where: { tripId } });
-  await prisma.tripMember.upsert({
-    where: { tripId_userId: { tripId, userId } },
-    update: {},
-    create: { tripId, userId, hue: (count * 67) % 360, order: count },
+  await prisma.$transaction(async (tx) => {
+    const count = await tx.tripMember.count({ where: { tripId } });
+    await tx.tripMember.upsert({
+      where: { tripId_userId: { tripId, userId } },
+      update: {},
+      create: { tripId, userId, hue: (count * 67) % 360, order: count },
+    });
   });
   revalidatePath("/admin/users");
 }
