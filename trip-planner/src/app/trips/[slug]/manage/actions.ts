@@ -29,6 +29,13 @@ export async function createTripInvite(
 
 export async function removeTripMember(tripId: string, userId: string): Promise<void> {
   await requireTripLeader(tripId);
+  const member = await prisma.tripMember.findUniqueOrThrow({ where: { tripId_userId: { tripId, userId } } });
+
+  const expenseCount = await prisma.expense.count({ where: { paidById: member.id } });
+  if (expenseCount > 0) {
+    throw new Error("Cannot remove this member — they have recorded expenses on this trip.");
+  }
+
   await prisma.tripMember.delete({ where: { tripId_userId: { tripId, userId } } });
   revalidatePath("/trips");
 }
