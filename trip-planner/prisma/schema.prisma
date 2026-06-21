@@ -10,6 +10,57 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  ADMIN
+  USER
+}
+
+enum TripRole {
+  LEADER
+  MEMBER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions    Session[]
+  tripAccess  TripMember[]
+  invitesSent Invite[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Invite {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  email       String
+  role        Role      @default(USER)
+  tripIds     String[]
+  expiresAt   DateTime
+  usedAt      DateTime?
+  usedById    String?
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([email])
+}
+
 model Trip {
   id        String   @id @default(cuid())
   slug      String   @unique
@@ -18,23 +69,26 @@ model Trip {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members     Member[]
+  members     TripMember[]
   days        Day[]
   bookings    Booking[]
   savedPlaces SavedPlace[]
   expenses    Expense[]
 }
 
-model Member {
-  id     String @id @default(cuid())
-  tripId String
-  trip   Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  name   String
-  hue    Int
-  order  Int
+model TripMember {
+  id       String   @id @default(cuid())
+  tripId   String
+  trip     Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tripRole TripRole @default(MEMBER)
+  hue      Int
+  order    Int
 
   expenses Expense[]
 
+  @@unique([tripId, userId])
   @@index([tripId, order])
 }
 
@@ -113,14 +167,14 @@ model SavedPlace {
 }
 
 model Expense {
-  id        String @id @default(cuid())
+  id        String     @id @default(cuid())
   tripId    String
-  trip      Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip      Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
   order     Int
   item      String
   amountYen Int
   paidById  String
-  paidBy    Member @relation(fields: [paidById], references: [id])
+  paidBy    TripMember @relation(fields: [paidById], references: [id])
 
   @@index([tripId, order])
 }
