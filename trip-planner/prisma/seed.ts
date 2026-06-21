@@ -1,5 +1,6 @@
 import { prisma } from "../src/lib/prisma";
-import { ActivityLabel, SavedCategory } from "../src/generated/prisma/client";
+import { ActivityLabel, SavedCategory, Role, TripRole } from "../src/generated/prisma/client";
+import { hashPassword } from "../src/lib/password";
 
 interface ActSeed {
   label: ActivityLabel;
@@ -332,16 +333,41 @@ const SAVED_PLACES = [
 ];
 
 const EXPENSES = [
-  { item: "Haruka Express tickets", amt: 6120, by: "Tristan" },
-  { item: "OMO5 Gion Kyoto (3 nights)", amt: 54000, by: "Tris" },
-  { item: "Kobe beef lunch", amt: 18400, by: "Tristan" },
-  { item: "teamLab tickets (×2)", amt: 6800, by: "Tris" },
-  { item: "Rental car (1 day)", amt: 9500, by: "Tristan" },
+  { item: "Haruka Express tickets", amt: 6120, by: "admin" },
+  { item: "OMO5 Gion Kyoto (3 nights)", amt: 54000, by: "testuser" },
+  { item: "Kobe beef lunch", amt: 18400, by: "admin" },
+  { item: "teamLab tickets (×2)", amt: 6800, by: "testuser" },
+  { item: "Rental car (1 day)", amt: 9500, by: "admin" },
 ];
 
 async function main() {
   const slug = "kyoto-osaka";
   await prisma.trip.deleteMany({ where: { slug } });
+  await prisma.user.deleteMany({ where: { username: { in: ["Tristan", "TestUser"] } } });
+
+  const adminEmail = process.env.ADMIN_EMAIL ?? "tristan@example.com";
+  const adminUsername = process.env.ADMIN_USERNAME ?? "Tristan";
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "ChangeMe123!";
+  const testUserEmail = "testuser@example.com";
+  const testUserPassword = "TestUser123!";
+
+  const admin = await prisma.user.create({
+    data: {
+      username: adminUsername,
+      email: adminEmail,
+      passwordHash: await hashPassword(adminPassword),
+      role: Role.ADMIN,
+    },
+  });
+
+  const testUser = await prisma.user.create({
+    data: {
+      username: "TestUser",
+      email: testUserEmail,
+      passwordHash: await hashPassword(testUserPassword),
+      role: Role.USER,
+    },
+  });
 
   const trip = await prisma.trip.create({
     data: {
@@ -350,16 +376,16 @@ async function main() {
       startDate: new Date(Date.UTC(2026, 6, 10)),
       members: {
         create: [
-          { name: "Tristan", hue: 25, order: 0 },
-          { name: "Tris", hue: 235, order: 1 },
+          { userId: admin.id, tripRole: TripRole.LEADER, hue: 25, order: 0 },
+          { userId: testUser.id, tripRole: TripRole.MEMBER, hue: 235, order: 1 },
         ],
       },
     },
     include: { members: true },
   });
 
-  const tristan = trip.members.find((m) => m.name === "Tristan")!;
-  const tris = trip.members.find((m) => m.name === "Tris")!;
+  const adminMember = trip.members.find((m) => m.userId === admin.id)!;
+  const testUserMember = trip.members.find((m) => m.userId === testUser.id)!;
 
   for (const [dayOrder, day] of DAYS.entries()) {
     await prisma.day.create({
@@ -416,11 +442,13 @@ async function main() {
       order: i,
       item: e.item,
       amountYen: e.amt,
-      paidById: e.by === "Tristan" ? tristan.id : tris.id,
+      paidById: e.by === "admin" ? adminMember.id : testUserMember.id,
     })),
   });
 
   console.log(`Seeded trip "${trip.name}" (${slug}).`);
+  console.log(`Admin login: ${adminEmail} / ${adminPassword}`);
+  console.log(`Test user login: ${testUserEmail} / ${testUserPassword}`);
 }
 
 main()
