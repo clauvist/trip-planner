@@ -42,6 +42,15 @@ export async function removeTripMember(tripId: string, userId: string): Promise<
 
 export async function setTripMemberRole(tripId: string, userId: string, tripRole: TripRole): Promise<void> {
   await requireTripLeader(tripId);
+
+  if (tripRole === TripRole.MEMBER) {
+    const current = await prisma.tripMember.findUniqueOrThrow({ where: { tripId_userId: { tripId, userId } } });
+    if (current.tripRole === TripRole.LEADER) {
+      const leaderCount = await prisma.tripMember.count({ where: { tripId, tripRole: TripRole.LEADER } });
+      if (leaderCount <= 1) throw new Error("Cannot demote the last remaining Trip Leader.");
+    }
+  }
+
   await prisma.tripMember.update({ where: { tripId_userId: { tripId, userId } }, data: { tripRole } });
   revalidatePath("/trips");
 }

@@ -34,6 +34,19 @@ Two-person trip itinerary planner (Next.js App Router + Prisma/Postgres), implem
    npx prisma db seed
    ```
 
+   The seed script also creates two login accounts: an initial admin account and a second
+   regular/test-user account. The admin account is configurable via optional env vars (set
+   before running the seed), each falling back to a default if unset:
+
+   - `ADMIN_EMAIL` (default `tristan@example.com`)
+   - `ADMIN_USERNAME` (default `Tristan`)
+   - `ADMIN_PASSWORD` (default `ChangeMe123!`)
+
+   With the defaults, you can log in as:
+
+   - Admin: `tristan@example.com` / `ChangeMe123!`
+   - Test user: `testuser@example.com` / `TestUser123!`
+
 5. Start the dev server:
 
    ```bash
@@ -56,4 +69,4 @@ No special config is required. The Prisma extension (`Prisma.prisma`) gives synt
 
 ## Deploying
 
-Point `DATABASE_URL` at your hosted Postgres instance, run `npx prisma migrate deploy` once against it, then deploy the app (e.g. to Vercel). No auth is implemented — this is intended for trusted, low-traffic personal use (e.g. two people planning a trip).
+Point `DATABASE_URL` at your hosted Postgres instance, run `npx prisma migrate deploy` once against it, then deploy the app (e.g. to Vercel). The app has user accounts with auth and roles (Admin / User, and per-trip Leader / Member) — see the Setup section above for the seeded login credentials.

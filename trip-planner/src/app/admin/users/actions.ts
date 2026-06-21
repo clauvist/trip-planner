@@ -64,6 +64,12 @@ export async function deleteUser(userId: string): Promise<void> {
     const adminCount = await prisma.user.count({ where: { role: Role.ADMIN } });
     if (adminCount <= 1) throw new Error("Cannot delete the last remaining admin.");
   }
+
+  const expenseCount = await prisma.expense.count({ where: { paidBy: { userId } } });
+  if (expenseCount > 0) {
+    throw new Error("Cannot remove this user — they have recorded expenses on one or more trips.");
+  }
+
   await prisma.user.delete({ where: { id: userId } });
   revalidatePath("/admin/users");
 }
@@ -94,6 +100,13 @@ export async function grantTripAccess(userId: string, tripId: string): Promise<v
 
 export async function revokeTripAccess(userId: string, tripId: string): Promise<void> {
   await requireAdmin();
+  const member = await prisma.tripMember.findUniqueOrThrow({ where: { tripId_userId: { tripId, userId } } });
+
+  const expenseCount = await prisma.expense.count({ where: { paidById: member.id } });
+  if (expenseCount > 0) {
+    throw new Error("Cannot remove this member's trip access — they have recorded expenses on this trip.");
+  }
+
   await prisma.tripMember.delete({ where: { tripId_userId: { tripId, userId } } });
   revalidatePath("/admin/users");
 }
