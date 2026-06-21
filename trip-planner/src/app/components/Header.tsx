@@ -1,8 +1,10 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import Link from "next/link";
 import type { FullTrip } from "@/lib/trip";
 import { tripMeta } from "@/lib/dates";
+import { logout } from "@/app/login/actions";
 import type { Tab } from "../types";
 
 const TABS: { key: Tab; label: string }[] = [
@@ -17,10 +19,16 @@ export function Header({
   trip,
   tab,
   onChangeTab,
+  currentUsername,
+  isAdmin,
+  isTripLeader,
 }: {
   trip: FullTrip;
   tab: Tab;
   onChangeTab: (tab: Tab) => void;
+  currentUsername: string;
+  isAdmin: boolean;
+  isTripLeader: boolean;
 }) {
   const initial = trip.name.trim().charAt(0).toUpperCase() || "T";
 
@@ -56,27 +64,52 @@ export function Header({
               </div>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {trip.members.map((m) => {
-              const pill: CSSProperties = {
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 7,
-                background: `oklch(0.97 0.02 ${m.hue})`,
-                border: `1px solid oklch(0.91 0.045 ${m.hue})`,
-                padding: "5px 12px 5px 8px",
-                borderRadius: 999,
-                fontSize: 12.5,
-                fontWeight: 600,
-                color: "#5f554c",
-              };
-              return (
-                <span key={m.id} style={pill}>
-                  <span style={{ width: 18, height: 18, borderRadius: "50%", background: `oklch(0.58 0.10 ${m.hue})` }} />
-                  {m.name}
-                </span>
-              );
-            })}
+          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {trip.members.map((m) => {
+                const pill: CSSProperties = {
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 7,
+                  background: `oklch(0.97 0.02 ${m.hue})`,
+                  border: `1px solid oklch(0.91 0.045 ${m.hue})`,
+                  padding: "5px 12px 5px 8px",
+                  borderRadius: 999,
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  color: "#5f554c",
+                };
+                return (
+                  <span key={m.id} style={pill}>
+                    <span style={{ width: 18, height: 18, borderRadius: "50%", background: `oklch(0.58 0.10 ${m.hue})` }} />
+                    {m.user.username}
+                  </span>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 13, fontWeight: 600 }}>
+              {isTripLeader && (
+                <Link href={`/trips/${trip.slug}/manage`} style={{ color: "#5f554c" }}>
+                  Manage
+                </Link>
+              )}
+              {isAdmin && (
+                <Link href="/admin/users" style={{ color: "#5f554c" }}>
+                  Admin
+                </Link>
+              )}
+              <Link href="/profile" style={{ color: "#211b17" }}>
+                {currentUsername}
+              </Link>
+              <form action={logout}>
+                <button
+                  type="submit"
+                  style={{ background: "none", border: "none", color: "#5f554c", cursor: "pointer", fontWeight: 600, fontSize: 13, padding: 0 }}
+                >
+                  Log out
+                </button>
+              </form>
+            </div>
           </div>
         </div>
         <nav style={{ display: "flex", gap: 26, marginTop: 14, overflowX: "auto", borderBottom: "1px solid #ece3d8" }}>

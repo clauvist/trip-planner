@@ -16,7 +16,10 @@ export function ExpensesTab({ trip }: { trip: FullTrip }) {
     const [a, b] = trip.members;
     const paidA = paidByMember.get(a.id) ?? 0;
     const diff = Math.round(Math.abs(paidA - share));
-    settleText = paidA < share ? `${a.name} owes ${b.name} ${yen(diff)}` : `${b.name} owes ${a.name} ${yen(diff)}`;
+    settleText =
+      paidA < share
+        ? `${a.user.username} owes ${b.user.username} ${yen(diff)}`
+        : `${b.user.username} owes ${a.user.username} ${yen(diff)}`;
   }
 
   return (
@@ -45,7 +48,7 @@ export function ExpensesTab({ trip }: { trip: FullTrip }) {
             <div key={m.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
               <span style={{ color: "#6f655b", display: "inline-flex", alignItems: "center", gap: 7 }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: `oklch(0.58 0.10 ${m.hue})` }} />
-                {m.name} paid
+                {m.user.username} paid
               </span>
               <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600 }}>{yen(paidByMember.get(m.id) ?? 0)}</span>
             </div>
@@ -62,7 +65,7 @@ export function ExpensesTab({ trip }: { trip: FullTrip }) {
               <span style={{ fontSize: 14, fontWeight: 600, color: "#211b17" }}>{e.item}</span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: "#5f554c" }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: `oklch(0.58 0.10 ${e.paidBy.hue})` }} />
-                {e.paidBy.name}
+                {e.paidBy.user.username}
               </span>
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 700, color: "#332b24", whiteSpace: "nowrap" }}>{yen(e.amountYen)}</span>
